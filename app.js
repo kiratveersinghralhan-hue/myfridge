@@ -133,11 +133,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const test = await sb.from("Items").select("id", { head: true, count: "exact" });
 
     if (test.error) {
-      console.error("Supabase test error:", test.error);
-      setStatus("Sync: OFF (test error: " + test.error.message + ")", false);
+      console.error("Supabase test error FULL:", test.error);
+      const msg =
+        test.error.message ||
+        test.error.details ||
+        test.error.hint ||
+        JSON.stringify(test.error);
+      setStatus("Sync: OFF (test error: " + msg + ")", false);
       return;
     }
-
     setStatus("Sync: ON", true);
 
     const { data, error } = await sb.from("Items").select("*").order("created_at", { ascending: true });
