@@ -1,5 +1,4 @@
-// MyFridge (Netlify-safe): UI works even if Supabase fails
-alert("APP.JS LOADED v100");
+// MyFridge (GitHub Pages-safe + Sync Status)
 
 document.addEventListener("DOMContentLoaded", () => {
   const addBtn = document.getElementById("addBtn");
@@ -11,7 +10,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const itemList = document.getElementById("itemList");
   const searchInput = document.getElementById("searchInput");
 
-  // Local (offline) data always works
+  // ----- Status banner (visible on phone) -----
+  const status = document.createElement("div");
+  status.style.fontSize = "13px";
+  status.style.margin = "6px 0 12px 0";
+  status.style.padding = "8px 10px";
+  status.style.borderRadius = "10px";
+  status.style.background = "#f0f0f0";
+  status.textContent = "Sync: checking...";
+  const container = document.querySelector("main.container");
+  container.insertBefore(status, container.firstChild);
+
+  function setStatus(text, ok) {
+    status.textContent = text;
+    status.style.background = ok ? "#e7f7ee" : "#fff3cd";
+  }
+
+  // ----- Local (offline) -----
   let items = JSON.parse(localStorage.getItem("myfridge-items")) || [];
 
   function saveToStorage() {
@@ -34,7 +49,6 @@ document.addEventListener("DOMContentLoaded", () => {
       i.name.toLowerCase().includes(filterText.toLowerCase())
     );
 
-    // Sort soonest expiry first
     filtered.sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
 
     filtered.forEach((item) => {
@@ -52,9 +66,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       leftPart.textContent = text;
 
-      // highlight
-      if (daysLeft < 0) li.style.background = "#ffe5e5";       // red
-      else if (daysLeft <= 1) li.style.background = "#fff3cd"; // yellow
+      if (daysLeft < 0) li.style.background = "#ffe5e5";
+      else if (daysLeft <= 1) li.style.background = "#fff3cd";
 
       const delBtn = document.createElement("button");
       delBtn.textContent = "Delete";
@@ -63,17 +76,19 @@ document.addEventListener("DOMContentLoaded", () => {
       delBtn.addEventListener("click", async () => {
         const deletedItem = items[realIndex];
 
-        // local delete
         items.splice(realIndex, 1);
         saveToStorage();
         renderItems(searchInput.value);
 
-        // supabase delete (only if available)
         if (sb) {
-          const { error } = await sb.from("Items").insert([{ name, expiry }]);
-            alert(error ? ("Insert error: " + error.message) : "Inserted OK");
-            
-          if (error) console.error("Supabase delete error:", error);
+          const { error } = await sb.from("Items").delete().match({
+            name: deletedItem.name,
+            expiry: deletedItem.expiry
+          });
+          if (error) {
+            console.error("Supabase delete error:", error);
+            setStatus("Sync: OFF (delete error: " + error.message + ")", false);
+          }
         }
       });
 
@@ -83,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // UI always works
+  // UI events
   addBtn.addEventListener("click", () => {
     formBox.style.display = (formBox.style.display === "none") ? "block" : "none";
   });
@@ -92,29 +107,52 @@ document.addEventListener("DOMContentLoaded", () => {
     renderItems(searchInput.value);
   });
 
-  // ---- Supabase (optional, won’t break UI) ----
+  // ----- Supabase -----
   const SUPABASE_URL = "https://lcyvdkiovtychcfmwulv.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_F9N78vRV4oRgdwmUMFDr3w_OyNvllNM";
+  const SUPABASE_KEY = "sb_publishable_F9N78vRV4oRgdwmUMFDr3w_OyNvllNM"; // <-- paste exactly, inside quotes
 
   let sb = null;
   try {
-    // supabase.min.js exposes window.supabase
     if (window.supabase && typeof window.supabase.createClient === "function") {
-      sb = window.supabase.createClient(
-        "https://lcyvdkiovtychcfmwulv.supabase.co",
-        "sb_publishable_F9N78vRV4oRgdwmUMFDr3w_OyNvllNM"
-      );
-
-      alert("Supabase client: " + (sb ? "ON" : "OFF"));
-
-    } else {
-      console.warn("Supabase library did not load. App will work offline only.");
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     }
   } catch (e) {
-    console.warn("Supabase init failed. App will work offline only.", e);
+    sb = null;
   }
 
-  // Save item (local always, supabase if available)
+  // Render offline immediately
+  renderItems();
+
+  // Test + Load from Supabase
+  (async function initShared() {
+    if (!sb) {
+      setStatus("Sync: OFF (Supabase library not loaded)", false);
+      return;
+    }
+
+    const test = await sb.from("Items").select("id", { head: true, count: "exact" });
+
+    if (test.error) {
+      console.error("Supabase test error:", test.error);
+      setStatus("Sync: OFF (test error: " + test.error.message + ")", false);
+      return;
+    }
+
+    setStatus("Sync: ON", true);
+
+    const { data, error } = await sb.from("Items").select("*").order("created_at", { ascending: true });
+    if (error) {
+      console.error("Supabase fetch error:", error);
+      setStatus("Sync: OFF (fetch error: " + error.message + ")", false);
+      return;
+    }
+
+    items = data.map(d => ({ name: d.name, expiry: d.expiry }));
+    saveToStorage();
+    renderItems(searchInput.value);
+  })();
+
+  // Save item
   saveBtn.addEventListener("click", async () => {
     const name = itemNameInput.value.trim();
     const expiry = expiryDateInput.value;
@@ -124,45 +162,25 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // local save
+    // Local save always
     items.push({ name, expiry });
     saveToStorage();
     renderItems(searchInput.value);
 
-    // supabase save
+    // Supabase save
     if (sb) {
-      const { data, error } = await sb.from("Items").insert([{ name, expiry }]);
-
-      console.log("INSERT RESULT:", data, error);
-
+      const { error } = await sb.from("Items").insert([{ name, expiry }]);
       if (error) {
-      alert("Insert error: " + error.message);
-}
+        console.error("Supabase insert error:", error);
+        setStatus("Sync: OFF (insert error: " + error.message + ")", false);
+      } else {
+        setStatus("Sync: ON", true);
+      }
+    } else {
+      setStatus("Sync: OFF (Supabase not loaded)", false);
     }
 
     itemNameInput.value = "";
     expiryDateInput.value = "";
   });
-
-  // First paint (offline data)
-  renderItems();
-
-  // Load shared data if supabase is available
-  (async function loadShared() {
-    if (!sb) return;
-
-    const { data, error } = await sb
-      .from("Items")
-      .select("*")
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      console.error("Supabase fetch error:", error);
-      return;
-    }
-
-    items = data.map(d => ({ name: d.name, expiry: d.expiry }));
-    saveToStorage();
-    renderItems(searchInput.value);
-  })();
 });
