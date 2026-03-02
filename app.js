@@ -134,12 +134,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (test.error) {
       console.error("Supabase test error FULL:", test.error);
-      const msg =
-        test.error.message ||
-        test.error.details ||
-        test.error.hint ||
-        JSON.stringify(test.error);
-      setStatus("Sync: OFF (test error: " + msg + ")", false);
+    
+      // Force show on phone
+      alert(
+        "TEST ERROR:\n" +
+        JSON.stringify(test.error, Object.getOwnPropertyNames(test.error), 2)
+      );
+    
+      setStatus("Sync: OFF (test error)", false);
       return;
     }
     setStatus("Sync: ON", true);
