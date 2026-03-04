@@ -164,7 +164,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     setStatus("Sync: ON", true);
 
-    const { data, error } = await sb.from("Items").select("*").order("created_at", { ascending: true });
+    const { data, error } = await sb
+  .from("Items")
+  .select("*");
     if (error) {
       console.error("Supabase fetch error:", error);
       setStatus("Sync: OFF (fetch error: " + error.message + ")", false);
