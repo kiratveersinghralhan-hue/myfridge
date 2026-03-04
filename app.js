@@ -148,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const test = await sb.from("Items").select("id", { head: true, count: "exact" });
+    const test = await sb.from("Items").select("*");
 
     if (test.error) {
       console.error("Supabase test error FULL:", test.error);
