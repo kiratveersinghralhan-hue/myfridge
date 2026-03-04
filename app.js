@@ -111,23 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const SUPABASE_URL = "https://lcyvdkiovtychcfmwulv.supabase.co";
   const SUPABASE_KEY = "sb_publishable_F9N78vRV4oRgdwmUMFDr3w_OyNvllNM"; // <-- paste exactly, inside quotes
 
-  (async () => {
-  try {
-    const url = "https://lcyvdkiovtychcfmwulv.supabase.co/rest/v1/Items?select=id&limit=1";
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization: "Bearer " + SUPABASE_KEY
-      }
-    });
-
-    const text = await res.text();
-    alert("REST TEST\nStatus: " + res.status + "\n\n" + text);
-  } catch (e) {
-    alert("REST TEST FAILED\n" + e);
-  }
-})();
 
   let sb = null;
   try {
@@ -150,18 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const test = await sb.from("Items").select("*");
 
-    if (test.error) {
-      console.error("Supabase test error FULL:", test.error);
     
-      // Force show on phone
-      alert(
-        "TEST ERROR:\n" +
-        JSON.stringify(test.error, Object.getOwnPropertyNames(test.error), 2)
-      );
-    
-      setStatus("Sync: OFF (test error)", false);
-      return;
-    }
     setStatus("Sync: ON", true);
 
     const { data, error } = await sb
