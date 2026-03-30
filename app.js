@@ -198,8 +198,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function refreshAuthUI() {
-    const { data } = await sb.auth.getUser();
-    currentUser = data.user || null;
+    const { data, error } = await sb.auth.getSession();
+
+    if (error) {
+      console.error("Session error:", error);
+      currentUser = null;
+    } else {
+      currentUser = data.session ? data.session.user : null;
+    }
 
     if (currentUser) {
       authStatus.textContent = "Logged in: " + currentUser.email;
@@ -242,7 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const { data, error } = await sb.auth.signInWithPassword({
+    const { error } = await sb.auth.signInWithPassword({
       email,
       password
     });
@@ -252,13 +258,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    currentUser = data.user;
     await refreshAuthUI();
   });
 
   logoutBtn.addEventListener("click", async () => {
     await sb.auth.signOut();
-    currentUser = null;
     await refreshAuthUI();
   });
 
