@@ -3,8 +3,8 @@
   "short_name": "MyFridge",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#2ecc71",
-  "theme_color": "#2ecc71",
+  "background_color": "#f4fbff",
+  "theme_color": "#1f6f8b",
   "icons": [
     {
       "src": "icon-192.png",
