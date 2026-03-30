@@ -27,7 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ---------- STATE ----------
   let items = [];
-  let currentUser = null;
   let currentFridgeCode = localStorage.getItem("fridge-code") || "";
   fridgeCodeInput.value = currentFridgeCode;
 
@@ -45,13 +44,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setLoggedInUI(user) {
-    currentUser = user;
     authStatus.textContent = "Logged in: " + user.email;
     logoutBtn.style.display = "block";
   }
 
   function setLoggedOutUI() {
-    currentUser = null;
     authStatus.textContent = "Not logged in";
     logoutBtn.style.display = "none";
   }
@@ -180,8 +177,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function ensureProfile(user) {
-    if (!user) return;
-
     const { data, error } = await sb
       .from("profiles")
       .select("*")
@@ -196,12 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!data) {
       const { error: insertError } = await sb
         .from("profiles")
-        .insert([
-          {
-            id: user.id,
-            email: user.email
-          }
-        ]);
+        .insert([{ id: user.id, email: user.email }]);
 
       if (insertError) {
         console.error("Profile insert error:", insertError);
@@ -219,10 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const { error } = await sb.auth.signUp({
-      email,
-      password
-    });
+    const { error } = await sb.auth.signUp({ email, password });
 
     if (error) {
       alert(error.message);
@@ -250,14 +237,20 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (data && data.user) {
+    if (data.user) {
       setLoggedInUI(data.user);
       await ensureProfile(data.user);
     }
   });
 
   logoutBtn.addEventListener("click", async () => {
-    await sb.auth.signOut();
+    const { error } = await sb.auth.signOut();
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
     setLoggedOutUI();
   });
 
@@ -325,8 +318,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---------- INIT ----------
+  logoutBtn.style.display = "none";
+
   sb.auth.getSession().then(async ({ data }) => {
-    if (data && data.session && data.session.user) {
+    if (data.session && data.session.user) {
       setLoggedInUI(data.session.user);
       await ensureProfile(data.session.user);
     } else {
