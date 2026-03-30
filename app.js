@@ -1,6 +1,17 @@
 // MyFridge (GitHub Pages-safe + Sync Status)
 
 document.addEventListener("DOMContentLoaded", () => {
+
+  const fridgeCodeInput = document.getElementById("fridgeCode");
+  // Load saved fridge code
+const savedFridge = localStorage.getItem("fridge-code");
+
+if (savedFridge) {
+  fridgeCodeInput.value = savedFridge;
+}
+  fridgeCodeInput.addEventListener("input", () => {
+  localStorage.setItem("fridge-code", fridgeCodeInput.value.trim());
+});
   const addBtn = document.getElementById("addBtn");
   const formBox = document.getElementById("formBox");
   const saveBtn = document.getElementById("saveBtn");
