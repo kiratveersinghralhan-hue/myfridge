@@ -240,26 +240,29 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   loginBtn.addEventListener("click", async () => {
-    const email = authEmail.value.trim();
-    const password = authPassword.value.trim();
+  const email = authEmail.value.trim();
+  const password = authPassword.value.trim();
 
-    if (!email || !password) {
-      alert("Enter email and password");
-      return;
-    }
+  if (!email || !password) {
+    alert("Enter email and password");
+    return;
+  }
 
-    const { error } = await sb.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    await refreshAuthUI();
+  const { data, error } = await sb.auth.signInWithPassword({
+    email,
+    password
   });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  currentUser = data.user;
+
+  authStatus.textContent = "Logged in: " + currentUser.email;
+  logoutBtn.style.display = "block";
+});
 
   logoutBtn.addEventListener("click", async () => {
     await sb.auth.signOut();
