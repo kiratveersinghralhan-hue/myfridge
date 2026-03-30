@@ -1,17 +1,7 @@
-// MyFridge (GitHub Pages-safe + Sync Status)
+// MyFridge FINAL (Fridge system + Supabase + Sync)
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  const fridgeCodeInput = document.getElementById("fridgeCode");
-  // Load saved fridge code
-const savedFridge = localStorage.getItem("fridge-code");
-
-if (savedFridge) {
-  fridgeCodeInput.value = savedFridge;
-}
-  fridgeCodeInput.addEventListener("input", () => {
-  localStorage.setItem("fridge-code", fridgeCodeInput.value.trim());
-});
   const addBtn = document.getElementById("addBtn");
   const formBox = document.getElementById("formBox");
   const saveBtn = document.getElementById("saveBtn");
@@ -20,8 +10,9 @@ if (savedFridge) {
   const expiryDateInput = document.getElementById("expiryDate");
   const itemList = document.getElementById("itemList");
   const searchInput = document.getElementById("searchInput");
+  const fridgeCodeInput = document.getElementById("fridgeCode");
 
-  // ----- Status banner (visible on phone) -----
+  // ---------- STATUS ----------
   const status = document.createElement("div");
   status.style.fontSize = "13px";
   status.style.margin = "6px 0 12px 0";
@@ -29,44 +20,55 @@ if (savedFridge) {
   status.style.borderRadius = "10px";
   status.style.background = "#f0f0f0";
   status.textContent = "Sync: checking...";
-  const container = document.querySelector("main.container");
-  container.insertBefore(status, container.firstChild);
+  document.querySelector("main.container").prepend(status);
 
   function setStatus(text, ok) {
     status.textContent = text;
     status.style.background = ok ? "#e7f7ee" : "#fff3cd";
   }
 
-  // ----- Local (offline) -----
+  // ---------- LOCAL STORAGE ----------
   let items = JSON.parse(localStorage.getItem("myfridge-items")) || [];
 
   function saveToStorage() {
     localStorage.setItem("myfridge-items", JSON.stringify(items));
   }
 
+  // ---------- FRIDGE CODE SAVE ----------
+  const savedFridge = localStorage.getItem("fridge-code");
+  if (savedFridge) {
+    fridgeCodeInput.value = savedFridge;
+  }
+
+  function saveFridgeCode() {
+    localStorage.setItem("fridge-code", fridgeCodeInput.value.trim());
+  }
+
+  fridgeCodeInput.addEventListener("input", saveFridgeCode);
+  fridgeCodeInput.addEventListener("change", saveFridgeCode);
+
+  // ---------- HELPERS ----------
   function getDaysLeft(expiryDate) {
     const today = new Date();
     const expiry = new Date(expiryDate);
-    today.setHours(0, 0, 0, 0);
-    expiry.setHours(0, 0, 0, 0);
-    const diff = expiry - today;
-    return Math.round(diff / (1000 * 60 * 60 * 24));
+    today.setHours(0,0,0,0);
+    expiry.setHours(0,0,0,0);
+    return Math.round((expiry - today) / (1000 * 60 * 60 * 24));
   }
 
   function renderItems(filterText = "") {
     itemList.innerHTML = "";
 
-    let filtered = items.filter(i =>
-      i.name.toLowerCase().includes(filterText.toLowerCase())
+    let filtered = items.filter(item =>
+      item.name.toLowerCase().includes(filterText.toLowerCase())
     );
 
     filtered.sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
 
-    filtered.forEach((item) => {
-      const realIndex = items.indexOf(item);
-
+    filtered.forEach(item => {
       const li = document.createElement("li");
-      const leftPart = document.createElement("span");
+      const span = document.createElement("span");
+
       const daysLeft = getDaysLeft(item.expiry);
 
       let text = item.name + " – ";
@@ -75,121 +77,106 @@ if (savedFridge) {
       else if (daysLeft === 0) text += "expires today";
       else text += "expired " + Math.abs(daysLeft) + " days ago";
 
-      leftPart.textContent = text;
+      span.textContent = text;
 
       if (daysLeft < 0) li.style.background = "#ffe5e5";
       else if (daysLeft <= 1) li.style.background = "#fff3cd";
 
-      const delBtn = document.createElement("button");
-      delBtn.textContent = "Delete";
-      delBtn.className = "delete-btn";
-
-      delBtn.addEventListener("click", async () => {
-        const deletedItem = items[realIndex];
-
-        items.splice(realIndex, 1);
-        saveToStorage();
-        renderItems(searchInput.value);
-
-        if (sb) {
-          const { error } = await sb.from("Items").delete().match({
-            name: deletedItem.name,
-            expiry: deletedItem.expiry
-          });
-          if (error) {
-            console.error("Supabase delete error:", error);
-            setStatus("Sync: OFF (delete error: " + error.message + ")", false);
-          }
-        }
-      });
-
-      li.appendChild(leftPart);
-      li.appendChild(delBtn);
+      li.appendChild(span);
       itemList.appendChild(li);
     });
   }
 
-  // UI events
+  // ---------- UI ----------
   addBtn.addEventListener("click", () => {
-    formBox.style.display = (formBox.style.display === "none") ? "block" : "none";
+    formBox.style.display = formBox.style.display === "none" ? "block" : "none";
   });
 
   searchInput.addEventListener("input", () => {
     renderItems(searchInput.value);
   });
 
-  // ----- Supabase -----
+  // ---------- SUPABASE ----------
   const SUPABASE_URL = "https://lcyvdkiovtychcfmwulv.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_F9N78vRV4oRgdwmUMFDr3w_OyNvllNM"; // <-- paste exactly, inside quotes
-
+  const SUPABASE_KEY = "sb_publishable_F9N78vRV4oRgdwmUMFDr3w_OyNvllNM";
 
   let sb = null;
-  try {
-    if (window.supabase && typeof window.supabase.createClient === "function") {
-      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    }
-  } catch (e) {
-    sb = null;
+  if (window.supabase) {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   }
 
-  // Render offline immediately
   renderItems();
 
-  // Test + Load from Supabase
-  (async function initShared() {
+  // ---------- LOAD FROM SUPABASE ----------
+  async function loadItems() {
     if (!sb) {
-      setStatus("Sync: OFF (Supabase library not loaded)", false);
+      setStatus("Sync: OFF", false);
       return;
     }
 
-    const test = await sb.from("Items").select("*");
-
-    
-    setStatus("Sync: ON", true);
+    const fridgeCode = fridgeCodeInput.value.trim() || "default-fridge";
 
     const { data, error } = await sb
-  .from("Items")
-  .select("*");
+      .from("Items")
+      .select("*")
+      .eq("fridge_code", fridgeCode);
+
     if (error) {
-      console.error("Supabase fetch error:", error);
-      setStatus("Sync: OFF (fetch error: " + error.message + ")", false);
+      console.error(error);
+      setStatus("Sync: OFF (fetch error)", false);
       return;
     }
 
-    items = data.map(d => ({ name: d.name, expiry: d.expiry }));
-    saveToStorage();
-    renderItems(searchInput.value);
-  })();
+    setStatus("Sync: ON", true);
 
-  // Save item
+    items = data.map(d => ({
+      name: d.name,
+      expiry: d.expiry
+    }));
+
+    saveToStorage();
+    renderItems();
+  }
+
+  // ---------- SAVE ITEM ----------
   saveBtn.addEventListener("click", async () => {
+
     const name = itemNameInput.value.trim();
     const expiry = expiryDateInput.value;
 
     if (!name || !expiry) {
-      alert("Please enter food name and expiry date");
+      alert("Enter name and expiry");
       return;
     }
 
-    // Local save always
+    saveFridgeCode();
+
+    const fridgeCode = fridgeCodeInput.value.trim() || "default-fridge";
+
     items.push({ name, expiry });
     saveToStorage();
-    renderItems(searchInput.value);
+    renderItems();
 
-    // Supabase save
     if (sb) {
-      const { error } = await sb.from("Items").insert([{ name, expiry }]);
+      const { error } = await sb.from("Items").insert([
+        { name, expiry, fridge_code: fridgeCode }
+      ]);
+
       if (error) {
-        console.error("Supabase insert error:", error);
-        setStatus("Sync: OFF (insert error: " + error.message + ")", false);
+        console.error(error);
+        setStatus("Sync: OFF (insert error)", false);
       } else {
         setStatus("Sync: ON", true);
       }
-    } else {
-      setStatus("Sync: OFF (Supabase not loaded)", false);
     }
 
     itemNameInput.value = "";
     expiryDateInput.value = "";
   });
+
+  // Reload when fridge code changes
+  fridgeCodeInput.addEventListener("change", loadItems);
+
+  loadItems();
+
 });
