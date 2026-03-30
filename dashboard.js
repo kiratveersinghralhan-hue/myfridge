@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const accountEmail = document.getElementById("accountEmail");
   const menuLogoutBtn = document.getElementById("menuLogoutBtn");
   const accountLogoutBtn = document.getElementById("accountLogoutBtn");
-  const topUserEmail = document.getElementById("topUserEmail");
+  const topUserEmail = document.getElementById("topUserEmail") || {};
 
   const statusBox = document.getElementById("statusBox");
   const activeFridgeTag = document.getElementById("activeFridgeTag");
