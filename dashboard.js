@@ -34,6 +34,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let items = [];
   let currentFridgeCode = MyFridge.getFridgeCode();
+  let realtimeChannel = null;
+
   fridgeCodeInput.value = currentFridgeCode;
 
   menuUserEmail.textContent = user.email;
@@ -65,6 +67,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function logoutAndGo() {
+    if (realtimeChannel) {
+      await sb.removeChannel(realtimeChannel);
+      realtimeChannel = null;
+    }
+
     const { error } = await sb.auth.signOut();
     if (error) {
       alert(error.message || "Logout failed.");
@@ -149,12 +156,42 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  async function loadItems() {
+  function setupRealtime() {
+    if (realtimeChannel) {
+      sb.removeChannel(realtimeChannel);
+      realtimeChannel = null;
+    }
+
+    if (!currentFridgeCode) return;
+
+    realtimeChannel = sb
+      .channel("items-live-" + currentFridgeCode)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "Items",
+          filter: "fridge_code=eq." + currentFridgeCode
+        },
+        async () => {
+          await loadItems(false);
+        }
+      )
+      .subscribe();
+  }
+
+  async function loadItems(resetRealtime = true) {
     if (!currentFridgeCode) {
       items = [];
       renderItems();
       setStatus("Sync: enter fridge code", false);
       activeFridgeTag.textContent = "No fridge selected";
+
+      if (realtimeChannel) {
+        await sb.removeChannel(realtimeChannel);
+        realtimeChannel = null;
+      }
       return;
     }
 
@@ -173,6 +210,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderItems();
     setStatus("Sync: ON", true);
     activeFridgeTag.textContent = currentFridgeCode;
+
+    if (resetRealtime) {
+      setupRealtime();
+    }
   }
 
   openMenuBtn.addEventListener("click", openMenu);
@@ -204,7 +245,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   useFridgeBtn.addEventListener("click", async () => {
     saveCurrentFridgeCode();
-    await loadItems();
+    await loadItems(true);
   });
 
   saveBtn.addEventListener("click", async () => {
@@ -235,8 +276,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     itemNameInput.value = "";
     expiryDateInput.value = "";
     formBox.hidden = true;
-    await loadItems();
+
+    await loadItems(true);
   });
 
-  loadItems();
+  await loadItems(true);
 });
