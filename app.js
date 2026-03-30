@@ -44,14 +44,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setLoggedInUI(user) {
-    authStatus.textContent = "Logged in: " + user.email;
-    logoutBtn.style.display = "block";
-  }
+  authStatus.textContent = "Logged in: " + user.email;
+  logoutBtn.hidden = false;
+}
 
-  function setLoggedOutUI() {
-    authStatus.textContent = "Not logged in";
-    logoutBtn.style.display = "none";
-  }
+function setLoggedOutUI() {
+  authStatus.textContent = "Not logged in";
+  logoutBtn.hidden = true;
+}
 
   function getDaysLeft(expiryDate) {
     const today = new Date();
@@ -318,7 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---------- INIT ----------
-  logoutBtn.style.display = "none";
+  
 
   sb.auth.getSession().then(async ({ data }) => {
     if (data.session && data.session.user) {
