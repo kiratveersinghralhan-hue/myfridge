@@ -1,1 +1,102 @@
-<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>MyFridge</title><link rel="stylesheet" href="style.css"></head><body><h1>MyFridge</h1><script src="app.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyFridge</title>
+  <meta name="theme-color" content="#1f6f8b" />
+  <link rel="stylesheet" href="style.css?v=80" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__inner">
+      <div class="hero__logo">🧊</div>
+      <div>
+        <h1 class="hero__title">MyFridge</h1>
+        <p class="hero__subtitle">Fresh food. Smart tracking.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="panel panel--status">
+      <div id="statusBox" class="status status--warn">Sync: checking...</div>
+    </section>
+
+    <section class="panel">
+      <div class="panel__header">
+        <div>
+          <h2 class="panel__title">Your Fridge</h2>
+          <p class="panel__hint">Use one code per household so items stay separated.</p>
+        </div>
+      </div>
+
+      <div class="fridge-row">
+        <input
+          type="text"
+          id="fridgeCode"
+          class="input"
+          placeholder="Enter fridge code (example: sharma-home)"
+          autocomplete="off"
+        />
+        <button id="useFridgeBtn" class="btn btn--secondary">Use</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel__header">
+        <div>
+          <h2 class="panel__title">Search</h2>
+          <p class="panel__hint">Find items quickly inside the current fridge.</p>
+        </div>
+      </div>
+
+      <input
+        type="text"
+        id="searchInput"
+        class="input"
+        placeholder="Search items..."
+        autocomplete="off"
+      />
+    </section>
+
+    <section class="panel">
+      <div class="panel__header panel__header--row">
+        <div>
+          <h2 class="panel__title">Items</h2>
+          <p class="panel__hint">Soonest expiry appears first.</p>
+        </div>
+        <button id="addBtn" class="btn btn--primary btn--small">+ Add Item</button>
+      </div>
+
+      <div id="formBox" class="form-box" hidden>
+        <input
+          type="text"
+          id="itemName"
+          class="input"
+          placeholder="Food name"
+          autocomplete="off"
+        />
+
+        <label for="expiryDate" class="label">Expiry date</label>
+        <input
+          type="date"
+          id="expiryDate"
+          class="input"
+        />
+
+        <button id="saveBtn" class="btn btn--accent">Save Item</button>
+      </div>
+
+      <ul id="itemList" class="item-list"></ul>
+
+      <div id="emptyState" class="empty-state">
+        No items yet. Add your first item to this fridge.
+      </div>
+    </section>
+  </main>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script defer src="app.js?v=80"></script>
+</body>
+</html>
