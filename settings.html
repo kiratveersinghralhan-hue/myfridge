@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyFridge • Settings</title>
+  <meta name="theme-color" content="#1b8a66" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="style.css?v=500" />
+</head>
+<body class="app-page">
+  <header class="topbar">
+    <div class="topbar__left">
+      <a href="dashboard.html" class="icon-btn icon-btn--light link-reset">←</a>
+      <div>
+        <h1 class="topbar__title">Settings</h1>
+        <p class="topbar__subtitle">Local dashboard preferences</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="glass-card section">
+      <div class="section-head">
+        <div>
+          <h2>Saved Family Code</h2>
+          <p>Clear the local fridge code if you want to switch households.</p>
+        </div>
+      </div>
+
+      <div class="info-item">
+        <span class="info-label">Current saved code</span>
+        <strong id="savedFridgeCode">Loading...</strong>
+      </div>
+
+      <div id="settingsMessage" class="message-box" hidden></div>
+
+      <button id="clearFridgeBtn" class="btn btn-secondary btn-full" type="button">Clear Saved Fridge Code</button>
+    </section>
+
+    <section class="glass-card section">
+      <div class="section-head">
+        <div>
+          <h2>Navigation</h2>
+          <p>Open the main pages quickly.</p>
+        </div>
+      </div>
+      <div class="stack">
+        <a class="btn btn-primary btn-full link-reset" href="dashboard.html">Back to Dashboard</a>
+        <a class="btn btn-accent btn-full link-reset" href="account.html">Go to Account Info</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>MyFridge • Settings center</p>
+  </footer>
+
+  <script defer src="settings.js?v=500"></script>
+</body>
+</html>

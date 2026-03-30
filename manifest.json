@@ -1,0 +1,20 @@
+{
+  "name": "MyFridge",
+  "short_name": "MyFridge",
+  "start_url": "./index.html?v=301",
+  "display": "standalone",
+  "background_color": "#f4fbff",
+  "theme_color": "#19705d",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

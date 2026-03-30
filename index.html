@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyFridge • Login</title>
+  <meta name="theme-color" content="#1b8a66" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="style.css?v=500" />
+</head>
+<body class="auth-page">
+  <div class="bg-orb bg-orb--one"></div>
+  <div class="bg-orb bg-orb--two"></div>
+
+  <main class="auth-shell">
+    <section class="glass-card auth-card">
+      <div class="brand-block">
+        <img src="icon-192.png" alt="MyFridge logo" class="brand-logo" />
+        <div>
+          <h1 class="brand-title">MyFridge</h1>
+          <p class="brand-subtitle">Fresh food. Smart tracking.</p>
+        </div>
+      </div>
+
+      <div class="hero-copy">
+        <h2>Welcome</h2>
+        <p>Create your private family fridge, keep products in sync across devices, and track expiry dates with a premium clean dashboard.</p>
+      </div>
+
+      <div id="authMessage" class="message-box" hidden></div>
+
+      <div class="switch-row">
+        <button id="tabLogin" class="switch-btn switch-btn--active" type="button">Log In</button>
+        <button id="tabSignup" class="switch-btn" type="button">Sign Up</button>
+      </div>
+
+      <form id="authForm" class="stack-form">
+        <label class="field-label" for="authEmail">Email</label>
+        <input id="authEmail" class="input" type="email" placeholder="Enter your email" autocomplete="email" />
+
+        <label class="field-label" for="authPassword">Password</label>
+        <input id="authPassword" class="input" type="password" placeholder="Enter your password" autocomplete="current-password" />
+
+        <button id="authSubmitBtn" class="btn btn-primary btn-full" type="submit">Log In</button>
+      </form>
+
+      <p id="authHint" class="soft-text auth-note">No account yet? Switch to Sign Up.</p>
+    </section>
+  </main>
+
+  <footer class="footer footer--auth">
+    <p>MyFridge • Premium family food manager</p>
+  </footer>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script defer src="auth.js?v=500"></script>
+</body>
+</html>
