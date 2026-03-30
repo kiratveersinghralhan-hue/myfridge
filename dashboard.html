@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyFridge • Dashboard</title>
+  <meta name="theme-color" content="#19705d" />
+  <link rel="stylesheet" href="style.css?v=301" />
+</head>
+<body class="app-page">
+  <aside id="sideMenu" class="side-menu" hidden>
+    <div class="side-menu__top">
+      <div class="brand-block brand-block--small">
+        <div class="brand-icon brand-icon--small">🧊</div>
+        <div>
+          <h2 class="menu-title">MyFridge</h2>
+          <p class="menu-subtitle">Family dashboard</p>
+        </div>
+      </div>
+      <button id="closeMenuBtn" class="icon-btn" type="button">✕</button>
+    </div>
+
+    <nav class="menu-links">
+      <a href="dashboard.html" class="menu-link menu-link--active">Dashboard</a>
+      <a href="account.html" class="menu-link">Account Info</a>
+      <a href="settings.html" class="menu-link">Settings</a>
+    </nav>
+
+    <div class="side-menu__bottom">
+      <div id="menuUserEmail" class="menu-email">Logged in</div>
+      <button id="menuLogoutBtn" class="btn btn-danger btn-full" type="button">Log Out</button>
+    </div>
+  </aside>
+
+  <div id="menuOverlay" class="menu-overlay" hidden></div>
+
+  <header class="topbar">
+    <div class="topbar__left">
+      <button id="openMenuBtn" class="icon-btn icon-btn--light" type="button">☰</button>
+      <div>
+        <h1 class="topbar__title">MyFridge</h1>
+        <p class="topbar__subtitle">Smart family food dashboard</p>
+      </div>
+    </div>
+
+    <div class="topbar__right">
+      <button id="accountBtn" class="account-chip" type="button">Account ▾</button>
+      <div id="accountMenu" class="account-menu" hidden>
+        <div id="accountEmail" class="account-menu__email">Logged in</div>
+        <a href="account.html" class="account-menu__link">Account Info</a>
+        <a href="settings.html" class="account-menu__link">Settings</a>
+        <button id="accountLogoutBtn" class="account-menu__logout" type="button">Log Out</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="glass-card section">
+      <div id="statusBox" class="status-pill status-pill--warn">Sync: checking...</div>
+    </section>
+
+    <section class="glass-card section">
+      <div class="section-head">
+        <div>
+          <h2>Search</h2>
+          <p>Search products inside the selected family fridge.</p>
+        </div>
+      </div>
+      <input id="searchInput" class="input input--lg" type="text" placeholder="Search products..." autocomplete="off" />
+    </section>
+
+    <section class="glass-card section">
+      <div class="section-head section-head--spread">
+        <div>
+          <h2>Family Fridge Code</h2>
+          <p>Use one private code per household.</p>
+        </div>
+        <span id="activeFridgeTag" class="tag">No fridge selected</span>
+      </div>
+
+      <div class="inline-grid">
+        <input id="fridgeCode" class="input" type="text" placeholder="Enter family code" autocomplete="off" />
+        <button id="useFridgeBtn" class="btn btn-secondary" type="button">Use Code</button>
+      </div>
+    </section>
+
+    <section class="glass-card section">
+      <div class="section-head section-head--spread">
+        <div>
+          <h2>Products</h2>
+          <p>Expiry-aware smart food list.</p>
+        </div>
+        <button id="addBtn" class="btn btn-primary btn-small" type="button">+ Add Product</button>
+      </div>
+
+      <div id="formBox" class="soft-panel" hidden>
+        <label class="field-label" for="itemName">Product name</label>
+        <input id="itemName" class="input" type="text" placeholder="Example: Milk" autocomplete="off" />
+
+        <label class="field-label" for="expiryDate">Expiry date</label>
+        <input id="expiryDate" class="input" type="date" />
+
+        <button id="saveBtn" class="btn btn-accent btn-full" type="button">Save Product</button>
+      </div>
+
+      <ul id="itemList" class="item-list"></ul>
+      <div id="emptyState" class="empty-state">No items yet. Add your first product to this family fridge.</div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>MyFridge • Family smart storage made simple</p>
+  </footer>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script defer src="dashboard.js?v=301"></script>
+</body>
+</html>
