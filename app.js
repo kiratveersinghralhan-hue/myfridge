@@ -44,6 +44,18 @@ document.addEventListener("DOMContentLoaded", () => {
     return currentFridgeCode;
   }
 
+  function setLoggedInUI(user) {
+    currentUser = user;
+    authStatus.textContent = "Logged in: " + user.email;
+    logoutBtn.style.display = "block";
+  }
+
+  function setLoggedOutUI() {
+    currentUser = null;
+    authStatus.textContent = "Not logged in";
+    logoutBtn.style.display = "none";
+  }
+
   function getDaysLeft(expiryDate) {
     const today = new Date();
     const expiry = new Date(expiryDate);
@@ -197,26 +209,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function refreshAuthUI() {
-    const { data, error } = await sb.auth.getSession();
-
-    if (error) {
-      console.error("Session error:", error);
-      currentUser = null;
-    } else {
-      currentUser = data.session ? data.session.user : null;
-    }
-
-    if (currentUser) {
-      authStatus.textContent = "Logged in: " + currentUser.email;
-      logoutBtn.style.display = "block";
-      await ensureProfile(currentUser);
-    } else {
-      authStatus.textContent = "Not logged in";
-      logoutBtn.style.display = "none";
-    }
-  }
-
   // ---------- AUTH ----------
   signupBtn.addEventListener("click", async () => {
     const email = authEmail.value.trim();
@@ -240,37 +232,42 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   loginBtn.addEventListener("click", async () => {
-  const email = authEmail.value.trim();
-  const password = authPassword.value.trim();
+    const email = authEmail.value.trim();
+    const password = authPassword.value.trim();
 
-  if (!email || !password) {
-    alert("Enter email and password");
-    return;
-  }
+    if (!email || !password) {
+      alert("Enter email and password");
+      return;
+    }
 
-  const { data, error } = await sb.auth.signInWithPassword({
-    email,
-    password
+    const { data, error } = await sb.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    if (data && data.user) {
+      setLoggedInUI(data.user);
+      await ensureProfile(data.user);
+    }
   });
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  currentUser = data.user;
-
-  authStatus.textContent = "Logged in: " + currentUser.email;
-  logoutBtn.style.display = "block";
-});
 
   logoutBtn.addEventListener("click", async () => {
     await sb.auth.signOut();
-    await refreshAuthUI();
+    setLoggedOutUI();
   });
 
-  sb.auth.onAuthStateChange(async () => {
-    await refreshAuthUI();
+  sb.auth.onAuthStateChange(async (_event, session) => {
+    if (session && session.user) {
+      setLoggedInUI(session.user);
+      await ensureProfile(session.user);
+    } else {
+      setLoggedOutUI();
+    }
   });
 
   // ---------- UI EVENTS ----------
@@ -328,6 +325,14 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---------- INIT ----------
-  refreshAuthUI();
+  sb.auth.getSession().then(async ({ data }) => {
+    if (data && data.session && data.session.user) {
+      setLoggedInUI(data.session.user);
+      await ensureProfile(data.session.user);
+    } else {
+      setLoggedOutUI();
+    }
+  });
+
   loadItems();
 });
