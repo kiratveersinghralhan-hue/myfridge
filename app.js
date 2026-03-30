@@ -167,6 +167,36 @@ document.addEventListener("DOMContentLoaded", () => {
     setStatus("Sync: ON", true);
   }
 
+  async function ensureProfile(user) {
+    if (!user) return;
+
+    const { data, error } = await sb
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Profile fetch error:", error);
+      return;
+    }
+
+    if (!data) {
+      const { error: insertError } = await sb
+        .from("profiles")
+        .insert([
+          {
+            id: user.id,
+            email: user.email
+          }
+        ]);
+
+      if (insertError) {
+        console.error("Profile insert error:", insertError);
+      }
+    }
+  }
+
   async function refreshAuthUI() {
     const { data } = await sb.auth.getUser();
     currentUser = data.user || null;
@@ -174,6 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentUser) {
       authStatus.textContent = "Logged in: " + currentUser.email;
       logoutBtn.style.display = "block";
+      await ensureProfile(currentUser);
     } else {
       authStatus.textContent = "Not logged in";
       logoutBtn.style.display = "none";
