@@ -18,7 +18,7 @@ window.MyFridge = (() => {
     return window.location.origin + getBasePath() + "/" + page;
   }
 
-  function goTo(page, version = "final") {
+  function goTo(page, version = "301") {
     window.location.href = buildUrl(page) + "?v=" + encodeURIComponent(version);
   }
 
@@ -49,22 +49,13 @@ window.MyFridge = (() => {
         .eq("id", user.id)
         .maybeSingle();
 
-      if (error) {
-        console.warn("Profile read error:", error.message || error);
-        return;
-      }
+      if (error) return;
 
       if (!data) {
-        const { error: insertError } = await sb
-          .from("profiles")
-          .insert([{ id: user.id, email: user.email }]);
-
-        if (insertError) {
-          console.warn("Profile insert error:", insertError.message || insertError);
-        }
+        await sb.from("profiles").insert([{ id: user.id, email: user.email }]);
       }
-    } catch (err) {
-      console.warn("ensureProfile failed:", err);
+    } catch (e) {
+      console.warn(e);
     }
   }
 
@@ -109,17 +100,7 @@ window.MyFridge = (() => {
   }
 
   return {
-    createClient,
-    goTo,
-    buildUrl,
-    getSession,
-    getUser,
-    requireAuth,
-    ensureProfile,
-    setMessage,
-    clearMessage,
-    saveFridgeCode,
-    getFridgeCode,
-    formatExpiryText
+    createClient, buildUrl, goTo, getSession, getUser, requireAuth, ensureProfile,
+    setMessage, clearMessage, saveFridgeCode, getFridgeCode, formatExpiryText
   };
 })();

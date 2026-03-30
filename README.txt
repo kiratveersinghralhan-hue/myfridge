@@ -1,49 +1,29 @@
-MyFridge Final Polished Version
+Corrected MyFridge ZIP
 
-Included pages:
-- index.html      : premium login/signup page
-- dashboard.html  : main dashboard
-- account.html    : account info page
-- settings.html   : settings page
+This ZIP fixes the missing common.js load order bug.
 
-Included scripts:
+Pages included:
+- index.html
+- dashboard.html
+- account.html
+- settings.html
+
+Scripts included:
 - common.js
 - auth.js
 - dashboard.js
 - account.js
 - settings.js
 
-PWA files:
+PWA included:
 - manifest.json
 - sw.js
 - icon-192.png
 - icon-512.png
 
-Already wired:
-- Supabase URL
-- Supabase publishable key
+Important:
+If you already uploaded older files, replace everything with this ZIP.
+Then open:
+index.html?v=9999
 
-Required Supabase setup:
-- Auth email provider enabled
-- Email signup enabled
-- Confirm email OFF for testing
-- Table: Items
-  Columns:
-  - name
-  - expiry
-  - fridge_code
-  - id (optional)
-- Table: profiles
-  Columns:
-  - id
-  - email
-
-Recommended first open:
-https://lcyvdkiovtychcfmwulv.supabase.co
-
-Actual site base:
-https://kiratveersinghralhan-hue.github.io/myfridge
-
-After uploading to GitHub Pages:
-- open index.html?v=301
-- if you had older versions, hard refresh or remove old home-screen app once
+If an older app is installed on phone, remove it once and re-add it after upload.
