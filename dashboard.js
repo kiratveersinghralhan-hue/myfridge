@@ -1,17 +1,21 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  const sb = window.supabase.createClient("https://lcyvdkiovtychcfmwulv.supabase.co", "sb_publishable_F9N78vRV4oRgdwmUMFDr3w_OyNvllNM");
+  const sb = window.supabase.createClient(
+    "https://lcyvdkiovtychcfmwulv.supabase.co",
+    "sb_publishable_F9N78vRV4oRgdwmUMFDr3w_OyNvllNM"
+  );
 
   const sideMenu = document.getElementById("sideMenu");
   const menuOverlay = document.getElementById("menuOverlay");
   const openMenuBtn = document.getElementById("openMenuBtn");
   const closeMenuBtn = document.getElementById("closeMenuBtn");
   const menuUserEmail = document.getElementById("menuUserEmail");
+  const menuLogoutBtn = document.getElementById("menuLogoutBtn");
+
   const accountBtn = document.getElementById("accountBtn");
   const accountMenu = document.getElementById("accountMenu");
   const accountEmail = document.getElementById("accountEmail");
-  const menuLogoutBtn = document.getElementById("menuLogoutBtn");
   const accountLogoutBtn = document.getElementById("accountLogoutBtn");
-  const topUserEmail = document.getElementById("topUserEmail") || {};
+  const topUserEmail = document.getElementById("topUserEmail");
 
   const statusBox = document.getElementById("statusBox");
   const activeFridgeTag = document.getElementById("activeFridgeTag");
@@ -65,7 +69,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const query = searchInput.value.trim().toLowerCase();
     let filtered = [...items];
     if (query) {
-      filtered = filtered.filter(item => item.name.toLowerCase().includes(query));
+      filtered = filtered.filter(item =>
+        (item.name || "").toLowerCase().includes(query)
+      );
     }
     filtered.sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
     return filtered;
@@ -107,9 +113,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       meta.className = "item-card__meta";
       meta.textContent = expiryText;
 
-      left.appendChild(name);
-      left.appendChild(meta);
-
       const delBtn = document.createElement("button");
       delBtn.className = "item-card__delete";
       delBtn.textContent = "Delete";
@@ -133,6 +136,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         await loadItems();
       });
 
+      left.appendChild(name);
+      left.appendChild(meta);
       li.appendChild(left);
       li.appendChild(delBtn);
       itemList.appendChild(li);
@@ -188,30 +193,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.location.href = "index.html";
   }
 
-  const { data: sessionData } = await sb.auth.getSession();
-  const user = sessionData.session ? sessionData.session.user : null;
+  try {
+    const { data: sessionData } = await sb.auth.getSession();
+    const user = sessionData.session ? sessionData.session.user : null;
 
-  if (!user) {
-    window.location.href = "index.html";
+    if (!user) {
+      window.location.href = "index.html";
+      return;
+    }
+
+    if (topUserEmail) topUserEmail.textContent = user.email;
+    if (menuUserEmail) menuUserEmail.textContent = user.email;
+    if (accountEmail) accountEmail.textContent = user.email;
+
+    await ensureProfile(user);
+  } catch (e) {
+    console.error("Session error:", e);
+    setStatus("Sync: OFF (session error)", false);
     return;
   }
 
-  topUserEmail.textContent = user.email;
-  menuUserEmail.textContent = user.email;
-  accountEmail.textContent = user.email;
-  await ensureProfile(user);
   saveFridgeCode();
 
   openMenuBtn.addEventListener("click", openMenu);
   closeMenuBtn.addEventListener("click", closeMenu);
   menuOverlay.addEventListener("click", closeMenu);
 
-  accountBtn.addEventListener("click", () => {
+  accountBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
     accountMenu.hidden = !accountMenu.hidden;
   });
 
   document.addEventListener("click", (e) => {
-    if (!accountBtn.contains(e.target) && !accountMenu.contains(e.target)) {
+    if (!accountMenu.hidden && !accountMenu.contains(e.target) && e.target !== accountBtn) {
       accountMenu.hidden = true;
     }
   });
@@ -224,6 +238,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   searchInput.addEventListener("input", renderItems);
+
   fridgeCodeInput.addEventListener("input", saveFridgeCode);
   fridgeCodeInput.addEventListener("change", saveFridgeCode);
   fridgeCodeInput.addEventListener("blur", saveFridgeCode);
@@ -248,7 +263,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    const { error } = await sb.from("Items").insert([{ name, expiry, fridge_code: fridgeCode }]);
+    const { error } = await sb
+      .from("Items")
+      .insert([{ name, expiry, fridge_code: fridgeCode }]);
 
     if (error) {
       console.error("Insert error:", error);

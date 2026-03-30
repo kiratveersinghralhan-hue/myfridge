@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MyFridge • Dashboard</title>
   <meta name="theme-color" content="#19705d" />
-  <link rel="stylesheet" href="style.css?v=301" />
+  <link rel="stylesheet" href="style.css?v=302" />
 </head>
 <body class="app-page">
   <aside id="sideMenu" class="side-menu" hidden>
@@ -44,7 +44,9 @@
     </div>
 
     <div class="topbar__right">
+      <div id="topUserEmail" class="top-user-email"></div>
       <button id="accountBtn" class="account-chip" type="button">Account ▾</button>
+
       <div id="accountMenu" class="account-menu" hidden>
         <div id="accountEmail" class="account-menu__email">Logged in</div>
         <a href="account.html" class="account-menu__link">Account Info</a>
@@ -113,6 +115,6 @@
   </footer>
 
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script defer src="dashboard.js?v=301"></script>
+  <script defer src="dashboard.js?v=302"></script>
 </body>
 </html>
