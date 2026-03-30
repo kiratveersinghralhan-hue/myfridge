@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // ---------- DOM ----------
   const addBtn = document.getElementById("addBtn");
   const formBox = document.getElementById("formBox");
   const saveBtn = document.getElementById("saveBtn");
@@ -12,19 +13,35 @@ document.addEventListener("DOMContentLoaded", () => {
   const emptyState = document.getElementById("emptyState");
   const statusBox = document.getElementById("statusBox");
 
+  const authEmail = document.getElementById("authEmail");
+  const authPassword = document.getElementById("authPassword");
+  const signupBtn = document.getElementById("signupBtn");
+  const loginBtn = document.getElementById("loginBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const authStatus = document.getElementById("authStatus");
+
+  // ---------- SUPABASE ----------
   const SUPABASE_URL = "https://lcyvdkiovtychcfmwulv.supabase.co";
   const SUPABASE_KEY = "sb_publishable_F9N78vRV4oRgdwmUMFDr3w_OyNvllNM";
-
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // ---------- STATE ----------
   let items = [];
+  let currentUser = null;
   let currentFridgeCode = localStorage.getItem("fridge-code") || "";
   fridgeCodeInput.value = currentFridgeCode;
 
+  // ---------- HELPERS ----------
   function setStatus(text, ok) {
     statusBox.textContent = text;
     statusBox.classList.remove("status--ok", "status--warn");
     statusBox.classList.add(ok ? "status--ok" : "status--warn");
+  }
+
+  function saveFridgeCode() {
+    currentFridgeCode = fridgeCodeInput.value.trim();
+    localStorage.setItem("fridge-code", currentFridgeCode);
+    return currentFridgeCode;
   }
 
   function getDaysLeft(expiryDate) {
@@ -32,14 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const expiry = new Date(expiryDate);
     today.setHours(0, 0, 0, 0);
     expiry.setHours(0, 0, 0, 0);
-    const diff = expiry - today;
-    return Math.round(diff / (1000 * 60 * 60 * 24));
-  }
-
-  function saveFridgeCode() {
-    currentFridgeCode = fridgeCodeInput.value.trim();
-    localStorage.setItem("fridge-code", currentFridgeCode);
-    return currentFridgeCode;
+    return Math.round((expiry - today) / (1000 * 60 * 60 * 24));
   }
 
   function getFilteredItems() {
@@ -157,6 +167,75 @@ document.addEventListener("DOMContentLoaded", () => {
     setStatus("Sync: ON", true);
   }
 
+  async function refreshAuthUI() {
+    const { data } = await sb.auth.getUser();
+    currentUser = data.user || null;
+
+    if (currentUser) {
+      authStatus.textContent = "Logged in: " + currentUser.email;
+      logoutBtn.style.display = "block";
+    } else {
+      authStatus.textContent = "Not logged in";
+      logoutBtn.style.display = "none";
+    }
+  }
+
+  // ---------- AUTH ----------
+  signupBtn.addEventListener("click", async () => {
+    const email = authEmail.value.trim();
+    const password = authPassword.value.trim();
+
+    if (!email || !password) {
+      alert("Enter email and password");
+      return;
+    }
+
+    const { error } = await sb.auth.signUp({
+      email,
+      password
+    });
+
+    if (error) {
+      alert(error.message);
+    } else {
+      alert("Signup successful. Now log in.");
+    }
+  });
+
+  loginBtn.addEventListener("click", async () => {
+    const email = authEmail.value.trim();
+    const password = authPassword.value.trim();
+
+    if (!email || !password) {
+      alert("Enter email and password");
+      return;
+    }
+
+    const { data, error } = await sb.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    currentUser = data.user;
+    await refreshAuthUI();
+  });
+
+  logoutBtn.addEventListener("click", async () => {
+    await sb.auth.signOut();
+    currentUser = null;
+    await refreshAuthUI();
+  });
+
+  sb.auth.onAuthStateChange(async () => {
+    await refreshAuthUI();
+  });
+
+  // ---------- UI EVENTS ----------
   addBtn.addEventListener("click", () => {
     formBox.hidden = !formBox.hidden;
   });
@@ -210,5 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
     await loadItems();
   });
 
+  // ---------- INIT ----------
+  refreshAuthUI();
   loadItems();
 });
